@@ -30,11 +30,11 @@ with open('README.rst', 'r') as f:
 
 
 setup(
-    name='influxdb',
+    name='asim-influxdb',
     version=version,
     description="InfluxDB client",
     long_description=readme,
-    url='https://github.com/influxdb/influxdb-python',
+    url='https://github.com/Asimmetric/influxdb-python',
     license='MIT License',
     packages=find_packages(exclude=['tests']),
     test_suite='tests',
