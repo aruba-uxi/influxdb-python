@@ -16,6 +16,7 @@ pipeline {
       steps {
         echo 'Run flake tests...'
         sh 'make flake'
+        echo 'lol, haxor'
       }
     }
 
