@@ -19,6 +19,10 @@ from influxdb.resultset import ResultSet
 from .exceptions import InfluxDBClientError
 from .exceptions import InfluxDBServerError
 
+
+ERROR_WRITE_TOO_OLD = 'partial write: points beyond retention policy dropped=1'
+
+
 try:
     xrange
 except NameError:
@@ -249,6 +253,10 @@ localhost:8086/databasename', timeout=5, udp_port=159)
         if response.status_code >= 500 and response.status_code < 600:
             raise InfluxDBServerError(response.content)
         elif response.status_code == expected_response_code:
+            return response
+        # if we get a 400 partial write due to data being too old, ignore it
+        # this is safe-ish since the write method just throws away this response...
+        elif response.status_code == 400 and response.content == ERROR_WRITE_TOO_OLD:
             return response
         else:
             raise InfluxDBClientError(response.content, response.status_code)
