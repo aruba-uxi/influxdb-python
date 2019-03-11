@@ -19,6 +19,10 @@ from influxdb.resultset import ResultSet
 from .exceptions import InfluxDBClientError
 from .exceptions import InfluxDBServerError
 
+
+ERROR_WRITE_TOO_OLD = 'partial write: points beyond retention policy dropped=1'
+
+
 try:
     xrange
 except NameError:
@@ -284,14 +288,21 @@ localhost:8086/databasename', timeout=5, udp_port=159)
         elif protocol == 'line':
             data = ('\n'.join(data) + '\n').encode('utf-8')
 
-        self.request(
-            url="write",
-            method='POST',
-            params=params,
-            data=data,
-            expected_response_code=expected_response_code,
-            headers=headers
-        )
+        try:
+            self.request(
+                url="write",
+                method='POST',
+                params=params,
+                data=data,
+                expected_response_code=expected_response_code,
+                headers=headers
+            )
+        except InfluxDBClientError as ex:
+            # if we get a 400 partial write due to data being too old, ignore it
+            # this is safe-ish since the write method just throws away this response...
+            if ex.code != 400 or ex.content != ERROR_WRITE_TOO_OLD:
+                raise ex
+
         return True
 
     def query(self,
